@@ -1,4 +1,6 @@
 const isDev = process.env.NODE_ENV !== "production";
+// Only emit HSTS when the deployment explicitly opts in to HTTPS enforcement.
+const hstsEnabled = !isDev && process.env.PRISM_ENABLE_HSTS === "true";
 
 /** Origins of the configured Horizon and RPC endpoints, skipping any value that isn't a URL. */
 function endpointOrigins() {
@@ -40,6 +42,11 @@ const nextConfig = {
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          ...(hstsEnabled
+            ? [{ key: "Strict-Transport-Security", value: "max-age=31536000" }]
+            : []),
         ],
       },
     ];
