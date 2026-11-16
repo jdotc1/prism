@@ -83,6 +83,21 @@ describe("configWarnings", () => {
     expect(configWarnings(resolveConfig({}))).toEqual([]);
   });
 
+  it("warns visibly when NEXT_PUBLIC_NETWORK is misspelled", () => {
+    const cfg = resolveConfig({ NEXT_PUBLIC_NETWORK: "mainet" });
+    expect(cfg.network).toBe("testnet");
+    const warnings = configWarnings(cfg);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("mainet");
+    expect(warnings[0]).toContain("NEXT_PUBLIC_NETWORK");
+  });
+
+  it("does not warn about recognized aliases or blank network values", () => {
+    for (const value of [" mainnet ", "PUBNET", "futurenet", "", "  "]) {
+      expect(configWarnings(resolveConfig({ NEXT_PUBLIC_NETWORK: value }))).toEqual([]);
+    }
+  });
+
   it("flags an endpoint that disagrees with the configured network", () => {
     const cfg = resolveConfig({
       NEXT_PUBLIC_NETWORK: "mainnet",
