@@ -26,6 +26,7 @@ const DEFAULT_ENDPOINTS: Record<StellarNetwork, { horizon: string; rpc: string }
 
 export interface PrismConfig {
   network: StellarNetwork;
+  requestedNetwork?: string;
   horizonUrl: string;
   sorobanRpcUrl: string;
   siteUrl: string;
@@ -53,6 +54,7 @@ export function resolveConfig(env: EnvLike): PrismConfig {
   const defaults = DEFAULT_ENDPOINTS[network];
   return {
     network,
+    requestedNetwork: env.NEXT_PUBLIC_NETWORK,
     horizonUrl: (env.NEXT_PUBLIC_HORIZON_URL || defaults.horizon).replace(/\/+$/, ""),
     sorobanRpcUrl: (env.NEXT_PUBLIC_SOROBAN_RPC_URL || defaults.rpc).replace(/\/+$/, ""),
     siteUrl: env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
@@ -86,6 +88,12 @@ export function detectNetworkFromUrl(url: string): StellarNetwork | null {
  */
 export function configWarnings(cfg: PrismConfig): string[] {
   const warnings: string[] = [];
+  const requested = cfg.requestedNetwork?.trim().toLowerCase();
+  if (requested && !["testnet", "mainnet", "public", "pubnet", "futurenet"].includes(requested)) {
+    warnings.push(
+      `Unrecognized NEXT_PUBLIC_NETWORK value "${cfg.requestedNetwork}"; using testnet defaults.`
+    );
+  }
   const checks: [label: string, url: string][] = [
     ["Horizon", cfg.horizonUrl],
     ["Soroban RPC", cfg.sorobanRpcUrl],
