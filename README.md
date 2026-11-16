@@ -93,6 +93,12 @@ This runs Postgres, the indexer (`indexer/`), and the frontend together — see 
 
 The Postgres port is published only on `127.0.0.1`. Compose uses `prism` as a local-development-only default for `POSTGRES_PASSWORD`; set a strong value in your environment before starting the stack if you need a different password. Do not use the default for a production deployment.
 
+### Browser security headers
+
+The frontend sends a Content-Security-Policy, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`, and a `Permissions-Policy` that disables camera, microphone, geolocation, and payment APIs.
+
+For an HTTPS-only production deployment, set `PRISM_ENABLE_HSTS=true` when building or starting the frontend to also send `Strict-Transport-Security: max-age=31536000`. HSTS is off by default (and always off in development), so local HTTP and deployments that have not yet verified HTTPS support keep working. Only opt in after confirming the public domain serves HTTPS reliably; reverse proxies should preserve the header.
+
 ### Rate limits and reverse proxies
 
 Every `/api/*` route is rate-limited per client: 30 requests per minute, except `/api/contract/[id]/simulate` at 10 per minute. Each route keeps its own counter, so hitting the limit on one route doesn't block the others. Over the limit, the API returns `429` with a `Retry-After` header (in seconds).
